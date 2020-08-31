@@ -75,8 +75,8 @@ class ProxyRotator {
     const availableProxies = namespaceProxies.sort((a, b) => a.time - b.time).filter(x => {
       return x.time + namespace.timeout <= new Date().getTime()
     })
-    // If there's no available proxies return false
-    if (!availableProxies.length) return false
+    // If there's no available proxies return empty array
+    if (!availableProxies.length) return []
     // Return available proxies
     return availableProxies
   }
