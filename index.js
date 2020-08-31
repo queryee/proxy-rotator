@@ -73,7 +73,7 @@ class ProxyRotator {
     // Get least used proxies
     const namespaceProxies = Object.keys(namespace.data).map(proxy => ({ proxy, time: namespace.data[proxy] }))
     const availableProxies = namespaceProxies.sort((a, b) => a.time - b.time).filter(x => {
-      return x.time + namespace.timeout >= new Date().getTime()
+      return x.time + namespace.timeout <= new Date().getTime()
     })
     // If there's no available proxies return false
     if (!availableProxies.length) return false
