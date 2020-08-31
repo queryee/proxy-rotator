@@ -66,6 +66,21 @@ class ProxyRotator {
     }
   }
 
+  getAvailableProxies (ns = '_global') {
+    const namespace = this.namespaces.find(x => x.key === ns)
+    // If namespace doesn't exist return false
+    if (!namespace) return false
+    // Get least used proxies
+    const namespaceProxies = Object.keys(namespace.data).map(proxy => ({ proxy, time: namespace.data[proxy] }))
+    const availableProxies = namespaceProxies.sort((a, b) => a.time - b.time).filter(x => {
+      return x.time + namespace.timeout >= new Date().getTime()
+    })
+    // If there's no available proxies return false
+    if (!availableProxies.length) return false
+    // Return available proxies
+    return availableProxies
+  }
+
   getProxy (ns = '_global', callbackFn) {
     const namespaceKey = typeof ns === 'function' ? '_global' : ns
     const callback = typeof ns === 'function' ? ns : callbackFn
@@ -75,13 +90,13 @@ class ProxyRotator {
     if (!namespace) {
       return callback('unknown_namespace')
     }
-    // Get least used proxy
-    const namespaceProxies = Object.keys(namespace.data).map(proxy => ({ proxy, time: namespace.data[proxy] }))
-    const leastUsedProxy = namespaceProxies.sort((a, b) => a.time - b.time)[0]
-    // If the least used proxy was still used too recently with the set namespace timeout then we return error object
-    if (leastUsedProxy.time + namespace.timeout >= new Date().getTime()) {
+    // Get available proxies that are not waiting
+    const availableProxies = this.getAvailableProxies(ns)
+    // Check if any results
+    if (!availableProxies || !availableProxies.length) {
       return callback('no_available_proxies')
     }
+    const leastUsedProxy = availableProxies[0]
     // Proxy is good to use, set new time
     namespace.data[leastUsedProxy.proxy] = new Date().getTime()
     // Return proxy
